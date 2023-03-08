@@ -1,3 +1,6 @@
 .env.prod
 .env.prod.db
 app/mediafiles
+react-app/node_modules
+react-app/gitignore
+react-app/build

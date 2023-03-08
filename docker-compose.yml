@@ -18,6 +18,14 @@ services:
       - POSTGRES_USER=hello_django
       - POSTGRES_PASSWORD=hello_django
       - POSTGRES_DB=hello_django_dev
+  ui:
+    build: ./react-app
+    command: npm start
+    ports:
+      - 3000:3000
+    env_file:
+      - ./.env.dev
+
 volumes:
   postgres_data:
 

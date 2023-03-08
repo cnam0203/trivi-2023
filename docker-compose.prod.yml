@@ -27,9 +27,16 @@ services:
       - static_volume:/home/app/web/staticfiles
       - media_volume:/home/app/web/mediafiles
     ports:
-      - 1337:80
+      - 80:80
     depends_on:
       - web
+  ui:
+    build: ./react-app
+    command: npm start
+    ports:
+      - 3000:3000
+    env_file:
+      - ./.env.dev
 
 volumes:
   postgres_data:
