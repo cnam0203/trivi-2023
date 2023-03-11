@@ -2,8 +2,6 @@ import logo from './logo.svg';
 import './App.css';
 
 function App() {
-  alert(process.env.REACT_APP_BE_SERVER);
-
   return (
     <div className="App">
       <header className="App-header">
