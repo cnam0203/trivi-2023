@@ -1,6 +1,6 @@
 # Build docker image.
 # Sử dung node
-FROM node:19 as node
+FROM node:12 as node
 
 # Khai báo tham số
 ARG workdir=.
@@ -13,7 +13,7 @@ WORKDIR /app
 COPY ${workdir}/ /app/
 
 # Cài đặt các thư viện node liên quan.
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Chạy lệnh build.
 RUN npm run build
