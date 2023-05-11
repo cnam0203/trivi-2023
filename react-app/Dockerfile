@@ -14,10 +14,10 @@ COPY ${workdir}/ /app/
 
 ENV BE_SERVER=localhost:8000
 # Cài đặt các thư viện node liên quan.
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Chạy lệnh build.
-RUN npm run build
+# RUN npm run build
 
 # RUN npm install -g pm2
 
@@ -30,7 +30,7 @@ RUN npm run build
 # COPY --from=node /app/nginx.conf /etc/nginx/nginx.conf
 
 # Cài đặt curl cho câu lệnh check HEALTH
-RUN apt-get update && apt-get install -y curl
+# RUN apt-get update && apt-get install -y curl
 
 # Kiểm tra trạng thái của container sau khi chạy
 HEALTHCHECK --interval=1m --timeout=3s \
