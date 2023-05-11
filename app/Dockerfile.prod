@@ -3,7 +3,7 @@
 ###########
 
 # pull official base image
-FROM python:3.9.6-alpine as builder
+FROM python:3.10-alpine as base
 
 # set work directory
 WORKDIR /usr/src/app
@@ -13,9 +13,9 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # install psycopg2 dependencies
-RUN apk update \
-    && apk add postgresql-dev gcc python3-dev musl-dev
-
+RUN apk add --update --no-cache --virtual .tmp-build-deps \
+    gcc g++ libc-dev linux-headers postgresql-dev build-base \
+    && apk add libffi-dev
 # lint
 RUN pip install --upgrade pip
 # RUN pip install flake8==3.9.2
@@ -32,7 +32,7 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requir
 #########
 
 # pull official base image
-FROM python:3.9.6-alpine
+FROM python:3.10-alpine
 
 # create directory for the app user
 RUN mkdir -p /home/app
