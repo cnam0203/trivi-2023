@@ -6,6 +6,12 @@ djangorestframework-jwt
 django-cors-headers
 django-environ
 python-dotenv
-numpy
+numpy==1.21.2
+matplotlib==3.7.1
 pandas
 psycopg2
+# statsmodels==0.12.2
+scikit-learn==1.0
+surprise
+mlxtend
+pymongo

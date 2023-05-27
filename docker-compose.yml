@@ -27,29 +27,42 @@ services:
       - 3000:3000
     env_file:
       - ./.env.dev
-  airflow-db:
-    image: postgres:13.0-alpine
+  # airflow-db:
+  #   image: postgres:13.0-alpine
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data/
+  #   environment:
+  #     - POSTGRES_USER=airflow
+  #     - POSTGRES_PASSWORD=airflow
+  #     - POSTGRES_DB=airflow
+  #   ports:
+  #     - 5433:5432
+  # airflow:
+  #   build: ./airflow
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - airflow-db
+  #   environment:
+  #     - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql://airflow:airflow@airflow-db:5432/airflow
+  #   env_file:
+  #     - ./.env.dev
+  mongodb:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: hello_django
+      MONGO_INITDB_ROOT_PASSWORD: hello_django
+    ports:
+      - "27017:27017"
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_USER=airflow
-      - POSTGRES_PASSWORD=airflow
-      - POSTGRES_DB=airflow
-    ports:
-      - 5433:5432
-  airflow:
-    build: ./airflow
-    ports:
-      - "8080:8080"
-    depends_on:
-      - airflow-db
-    environment:
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql://airflow:airflow@airflow-db:5432/airflow
-    env_file:
-      - ./.env.dev
+      - mongodb_data:/data/db
+
 
 
 volumes:
   postgres_data2:
   postgres_data:
+  mongodb_data:
+
 

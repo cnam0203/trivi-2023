@@ -315,7 +315,7 @@ def get_reports_analytics(request, item_type):
 
             #Query data
             query = f"""
-            select a.*, b.*, c.*, d.*, {get_group_date_field('a.trans_time', groupBy)} as report_date, c.ti_quantity*d.prod_price::DECIMAL as revenue,
+            select a.*, b.*, c.*, d.*, {get_group_date_field('a.trans_time', groupBy)} as report_date, c.ti_quantity*COALESCE(NULLIF(d.prod_price, '')::DECIMAL, 0.00) as revenue,
             (case when date(a.trans_time) = b.cus_account_date then 'Yes' else 'No' end) as is_new,
             'None' as cus_segment , DATE_PART('day', AGE(now(), b.cus_dob)) AS cus_age
             from data_transaction a
@@ -441,7 +441,7 @@ def get_reports_analytics(request, item_type):
 
             #Query data
             query = f"""
-            select a.*, b.*, c.*, d.*, {get_group_date_field('a.trans_time', groupBy)} as report_date, c.ti_quantity*d.prod_price::DECIMAL as revenue,
+            select a.*, b.*, c.*, d.*, {get_group_date_field('a.trans_time', groupBy)} as report_date, c.ti_quantity*COALESCE(NULLIF(d.prod_price, '')::DECIMAL, 0.00) as revenue,
             (case when date(a.trans_time) = b.cus_account_date then 'Yes' else 'No' end) as is_new,
             'None' as cus_segment , DATE_PART('day', AGE(now(), b.cus_dob)) AS cus_age
             from data_transaction a
@@ -900,7 +900,7 @@ def get_reports_kpi(request):
                     group by category"""
         revenue_reports.append(create_pie_chart('Age-Group', query))
 
-        query = f"""select c.prod_category_1 as category, sum(b.ti_quantity*c.prod_price::DECIMAL) as value
+        query = f"""select c.prod_category_1 as category, sum(b.ti_quantity*COALESCE(NULLIF(c.prod_price, '')::DECIMAL, 0.00)) as value
                     from data_transaction a 
                     join data_transaction_item b 
                     on a.trans_id = b.trans_id
@@ -913,7 +913,7 @@ def get_reports_kpi(request):
                     group by category"""
         revenue_reports.append(create_pie_chart('Product category', query))
 
-        query = f"""select c.prod_name as category, sum(b.ti_quantity*c.prod_price::DECIMAL) as value
+        query = f"""select c.prod_name as category, sum(b.ti_quantity*COALESCE(NULLIF(c.prod_price, '')::DECIMAL, 0.00)) as value
                     from data_transaction a 
                     join data_transaction_item b 
                     on a.trans_id = b.trans_id
@@ -1033,7 +1033,7 @@ def get_reports_kpi(request):
         return Response({
             'status': 200,
             'message': 'Get reports successfully',
-            'reports': [customer_tab, revenue_tab, interaction_tab]})
+            'reports': [interaction_tab, customer_tab, revenue_tab]})
     except Exception as error:
             return Response({
                 'status': 201,
@@ -1492,7 +1492,6 @@ def import_data_api(request, item_type):
             'message': error
         })
     
-
 @api_view(['POST'])
 def import_matching_template(request, item_type):
     try: 

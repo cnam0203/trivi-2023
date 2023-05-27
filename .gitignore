@@ -4,3 +4,6 @@ app/mediafiles
 react-app/node_modules
 react-app/gitignore
 react-app/build
+*.png
+*.pkl
+*.pyc

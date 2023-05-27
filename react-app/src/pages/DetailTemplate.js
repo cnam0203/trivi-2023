@@ -83,7 +83,6 @@ export default () => {
     e.stopPropagation();
     e.preventDefault();
 
-    console.log(listMatchFields);
     fetchRequest(`data/update-matching-template/${itemType}/${templId}`, 'POST', 
     JSON.stringify({
       templateId: templId,

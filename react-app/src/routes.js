@@ -34,7 +34,6 @@ export const Routes = {
     TransactionItem: { path: "transaction_item" },
     Behavior: {path: "behavior"},
     // ImportHistory: { path: "/data-management/list/importhistory"},
-
     ListItems: { path: "/data-management/list/" },
     MatchingTemplate: { path: "/data-management/matching-template"},
     NewTemplate: { path: "/data-management/new-template"},
@@ -44,6 +43,15 @@ export const Routes = {
     ImportFile: { path: "/data-management/import-file/" },
     ImportHistory: { path: "/data-management/import-history"},
     DeleteItems: { path: "/data-management/delete-items/"},
+
+    ListModels: {path: "/data-knowledge/list/"},
+    ModelDetail: {path: "/data-knowledge/detail/"},
+    ModelRun: {path: "/data-knowledge/run/"},
+    TestAPI: {path: "/data-knowledge/test-api/"},
+    CustomerSegmentation: { path: "customer-segmentation"},
+    ProductRecommendation: { path: "product-recommendation"},
+    AssociationRule: { path: "association-rule"},
+    Correlation: { path: "correlation"},
 
     // docs
     DocsOverview: { path: "/documentation/overview" },

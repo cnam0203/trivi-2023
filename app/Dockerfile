@@ -18,7 +18,13 @@ ENV PYTHONUNBUFFERED 1
 
 RUN apk add --update --no-cache --virtual .tmp-build-deps \
     gcc g++ libc-dev linux-headers postgresql-dev build-base \
-    && apk add libffi-dev
+    && apk add libffi-dev libpng-dev
+
+
+RUN apk add --no-cache gfortran
+RUN apk update && \
+    apk add openblas-dev
+
 
 # install dependencies
 RUN pip install --upgrade pip

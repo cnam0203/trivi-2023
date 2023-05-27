@@ -10,7 +10,8 @@ import {
   faTimes,
   faShareAlt,
   faChartBar,
-  faFileAlt
+  faFileAlt,
+  faUser
 } from "@fortawesome/free-solid-svg-icons";
 import {
   Nav,
@@ -191,7 +192,7 @@ export default (props = {}) => {
               </CollapsableNavItem>
               <CollapsableNavItem
                 eventKey={Routes.Analytics.path}
-                title="Data Analytics"
+                title="Data Reports"
                 icon={faChartBar}
               >
                 <NavItem title="Customer" link={Routes.Analytics.path + Routes.Customer.path} />
@@ -200,6 +201,16 @@ export default (props = {}) => {
                 <NavItem title="Transaction" link={Routes.Analytics.path + Routes.Transaction.path}/>
               </CollapsableNavItem>
               <CollapsableNavItem
+                eventKey={Routes.ListModels.path}
+                title="Data Analytics"
+                icon={faShareAlt}
+              >
+                <NavItem title="Customer Segmentation" link={Routes.ListModels.path + Routes.CustomerSegmentation.path} />
+                <NavItem title="Product Recommendation" link={Routes.ListModels.path + Routes.ProductRecommendation.path} />
+                <NavItem title="Association Rule" link={Routes.ListModels.path + Routes.AssociationRule.path} />
+                <NavItem title="Correlation" link={Routes.ListModels.path + Routes.Correlation.path} />
+              </CollapsableNavItem>
+              {/* <CollapsableNavItem
                 eventKey="recommend/"
                 title="Recommendation"
                 icon={faShareAlt}
@@ -212,7 +223,7 @@ export default (props = {}) => {
                   title="API Integration"
                   link={Routes.Recommend.path}
                 />
-              </CollapsableNavItem>
+              </CollapsableNavItem> */}
               <NavItem
                 title="Documentation"
                 icon={faBook}

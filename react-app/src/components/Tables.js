@@ -65,7 +65,7 @@ export const PageVisitsTable = ({pages}) => {
   );
 };
 
-export const PageCustomizedTable = ({info}) => {
+export const PageCustomizedTable = ({info, width=4, isShowHeader=false}) => {
   const TableRow = ({row}) => {
 
     return (
@@ -84,7 +84,7 @@ export const PageCustomizedTable = ({info}) => {
   const [isAll, setAll] = useState(false);
 
   return (
-    <Col xs={12} xl={4} className="mb-4">
+    <Col xs={12} xl={width} className="mb-4">
     <Card style={{borderWidth: 1, borderColor: '#000'}} className="shadow-sm">
       <Card.Header style={{borderBottomWidth: 1, borderColor: '#000'}}>
         <Row className="align-items-center">
@@ -97,15 +97,17 @@ export const PageCustomizedTable = ({info}) => {
         </Row>
       </Card.Header>
       <Table responsive className="align-items-center table-flush">
-        {/* <thead className="thead-light">
-          <tr>
-            {
-              columnHeaders.map((header, index) => (
-                <th scope="col" key={index} className="text-center">{header}</th>
-              ))
-            }
-          </tr>
-        </thead> */}
+        {isShowHeader ? 
+          <thead className="thead-light">
+            <tr>
+              {
+                columnHeaders.map((header, index) => (
+                  <th scope="col" key={index} className="text-center">{header}</th>
+                ))
+              }
+            </tr>
+          </thead> : <></>
+        }
         <tbody>
           {data.slice(0, isAll ? data.length : 5).map((row, index) => <TableRow key={`page-visit-${index}`} row={row} />)}
         </tbody>

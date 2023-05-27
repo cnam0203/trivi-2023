@@ -22,6 +22,10 @@ import ImportHistory from "./ImportHistory";
 import MatchingTemplate from './MatchingTemplate';
 import NewTemplate from './NewTemplate';
 import DetailTemplate from './DetailTemplate';
+import ListModels from './ListModels';
+import ModelDetail from './ModelDetail';
+import NewModel from './NewModel';
+import TestAPI from './TestAPI';
 
 // components
 import Sidebar from "../components/Sidebar";
@@ -181,29 +185,27 @@ export default () => (
       path={Routes.DetailTemplate.path}
       component={DetailTemplate}
     />
-    {/* <RouteWithSidebar
-      exact
-      key="web-activity"
-      path={Routes.Activities.path}
-      component={ListItems}
-    />
-    <RouteWithSidebar
-      exact
-      key="event"
-      path={Routes.Event.path}
-      component={ListItems}
-    />
-    <RouteWithSidebar
-      exact
-      key="article"
-      path={Routes.Articles.path}
-      component={ListItems}
-    /> */}
     <RouteWithSidebar path={Routes.ItemDetail.path} component={Form} />
     <RouteWithSidebar path={Routes.ImportAPI.path} component={ImportAPI} />
     <RouteWithSidebar path={Routes.ImportFile.path} component={ImportFile} />
     <RouteWithSidebar path={Routes.ImportHistory.path} component={ImportHistory} />
     <RouteWithSidebar path={Routes.DeleteItems.path} component={DeleteItems} />
+    <RouteWithSidebar
+      path={Routes.ListModels.path}
+      component={ListModels}
+    />
+    <RouteWithSidebar
+      path={Routes.ModelDetail.path}
+      component={ModelDetail}
+    />
+    <RouteWithSidebar
+      path={Routes.ModelRun.path}
+      component={NewModel}
+    />
+    <RouteWithSidebar
+      path={Routes.TestAPI.path}
+      component={TestAPI}
+    />
     <RouteWithSidebar
       exact
       path={Routes.Recommend.path}
