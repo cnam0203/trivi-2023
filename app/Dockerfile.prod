@@ -3,7 +3,7 @@
 ###########
 
 # pull official base image
-FROM python:3.10-alpine as builder
+FROM python:3.10-slim as builder
 
 # set work directory
 WORKDIR /usr/src/app
@@ -12,10 +12,10 @@ WORKDIR /usr/src/app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# install psycopg2 dependencies
-RUN apk add --update --no-cache --virtual .tmp-build-deps \
-    gcc g++ libc-dev linux-headers libstdc++6 postgresql-dev build-base \
-    && apk add libffi-dev
+# install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc g++ libc-dev linux-headers-amd64 libstdc++6 postgresql-server-dev-all gfortran libopenblas-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # lint
 RUN pip install --upgrade pip
@@ -33,15 +33,16 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requir
 #########
 
 # pull official base image
-FROM python:3.10-alpine
+FROM python:3.10-slim
 
-RUN apk add --no-cache libstdc++
+# install netcat
+RUN apt-get update && apt-get install -y --no-install-recommends netcat && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # create directory for the app user
 RUN mkdir -p /home/app
 
 # create the app user
-RUN addgroup -S app && adduser -S app -G app
+RUN addgroup --system app && adduser --system --ingroup app app
 
 # create the appropriate directories
 ENV HOME=/home/app
@@ -52,23 +53,25 @@ RUN mkdir $APP_HOME/mediafiles
 WORKDIR $APP_HOME
 
 # install dependencies
-RUN apk update && apk add libpq
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/src/app/wheels /wheels
 COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --no-cache /wheels/*
 
 # copy entrypoint.prod.sh
 COPY ./entrypoint.prod.sh .
-RUN sed -i 's/\r$//g'  $APP_HOME/entrypoint.prod.sh
-RUN chmod +x  $APP_HOME/entrypoint.prod.sh
+RUN sed -i 's/\r$//g' $APP_HOME/entrypoint.prod.sh
+RUN chmod +x $APP_HOME/entrypoint.prod.sh
 
 # copy project
 COPY . $APP_HOME
 
-# chown all the files to the app user
+# set ownership
 RUN chown -R app:app $APP_HOME
 
-# change to the app user
+# switch to the app user
 USER app
 
 # run entrypoint.prod.sh

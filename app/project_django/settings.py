@@ -30,6 +30,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", default="").split(" ")
 
 
+#Request config
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get("DATA_UPLOAD_MAX_MEMORY_SIZE", default=10))
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get("FILE_UPLOAD_MAX_MEMORY_SIZE", default=10))
+TIMEOUT = int(os.environ.get("TIMEOUT", default=10))
 # Application definition
 
 INSTALLED_APPS = [
