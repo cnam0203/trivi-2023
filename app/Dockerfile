@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED 1
 
 # install psycopg2 dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential gcc g++ libc-dev linux-headers-amd64 libpq-dev libffi-dev libpng-dev gfortran libopenblas-dev \
+    build-essential gcc g++ libc-dev libpq-dev libffi-dev libpng-dev gfortran libopenblas-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # install dependencies

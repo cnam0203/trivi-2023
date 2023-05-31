@@ -14,7 +14,7 @@ import { useHistory, useLocation } from "react-router";
 import { TabTitle } from "../constants/generalFunctions";
 import { AppContext } from "./AppContext";
 import ProcessTables from "./tables/ProcessTables";
-import { usePapaParse, useCSVReader } from 'react-papaparse';
+import { usePapaParse, useCSVReader, jsonToCSV } from 'react-papaparse';
 
 
 export default () => {  
@@ -88,14 +88,21 @@ export default () => {
     e.stopPropagation();
     e.preventDefault();
 
+    const csvString = jsonToCSV(searchItems, {
+      quotes: true,
+      skipEmptyLines: true
+    });
+    console.log(csvString);
+    const csvData = new Blob([csvString], { type: 'text/csv' });
+    const formData = new FormData();
+    formData.append('csvFile', csvData, 'data.csv');
+    formData.append('columns', JSON.stringify(columns));
+    formData.append('matchFields', JSON.stringify(listMatchFields));
+    formData.append('matchFuncs', JSON.stringify(listMatchFuncs));
+    formData.append('isOverwrite', true);
+
     fetchRequest(`data/import-csv-file/${itemType}`, 'POST', 
-    JSON.stringify({
-      data: searchItems,
-      columns: columns,
-      matchFields: listMatchFields,
-      matchFuncs: listMatchFuncs,
-      isOverwrite: true,
-    }), false)
+    formData, false)
     .then((result) => {
       if (result != undefined) {
         let msg = '';

@@ -20,6 +20,8 @@ import json
 import pandas as pd
 import random
 import os
+import csv
+import io
 
 db = Database(
     os.environ.get("SQL_HOST", "localhost"),
@@ -1299,12 +1301,16 @@ def import_csv_file(request, item_type):
         email = user_serializer.data['email']
         org_id = user_serializer.data['org_id']
 
-        body = json.loads(request.body)
-        data = body['data']
-        columns = body['columns']
-        matchFields = body['matchFields']
-        matchFuncs = body['matchFuncs']
-        is_overwrite = body['isOverwrite']
+        csv_file = request.FILES['csvFile']
+        csv_text = io.TextIOWrapper(csv_file)
+        csv_reader = csv.DictReader(csv_text)
+        data = list(csv_reader)
+
+        columns = json.loads(request.POST.get('columns'))
+        matchFields = json.loads(request.POST.get('matchFields'))
+        matchFuncs = json.loads(request.POST.get('matchFuncs'))
+        is_overwrite = bool(request.POST.get('isOverwrite'))
+
         unique_field = get_unique_field(item_type)
         total_overwrite = 0
         total_inserted = 0
@@ -1384,6 +1390,7 @@ def import_csv_file(request, item_type):
             'errors': errors
         })
     except Exception as error:
+        print(error)
         return Response({
             'status': 201,
             'message': error
