@@ -17,39 +17,70 @@ class ProductRecommendation:
         self.db = db
         self.mongo_db = mongo_db
 
-    def train_recommendation(self, algorithm, similarity_score, model_name, fields, threshold, numbers, end_date, start_date, org_id):
+    def train_recommendation(self, algorithm, similarity_score, model_name, fields, num_neighbor, threshold, numbers, end_date, start_date, org_id):
         try:
             result = {
                 'status': 201,
                 'message': 'Run recommendation failed'
             }
-
+            recommendation_info = {}
             if algorithm == 1:
-                result = self.train_recommendation_1(start_date, end_date, similarity_score, fields, org_id)
+                result = self.train_recommendation_1(start_date, end_date, similarity_score, org_id)
+                if result['status'] == 200:
+                    recommendation_info = {
+                        "run_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        "org_id": int(org_id),
+                        "is_deleted": False,
+                        "start_date": start_date,
+                        'end_date': end_date,
+                        'fields': '',
+                        "model_path": "",
+                        "api": "",
+                        "numbers": numbers,
+                        "algorithm":  algorithm,
+                        "model_name": model_name,
+                        "similarity_score": similarity_score,
+                        "similarity_scores": result['similarity_scores']
+                    }
             elif algorithm == 2:
                 result = self.train_recommendation_2(start_date, end_date, similarity_score, fields, org_id)
+                if result['status'] == 200:
+                    recommendation_info = {
+                        "run_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        "org_id": int(org_id),
+                        "is_deleted": False,
+                        "fields": fields,
+                        "start_date": start_date,
+                        'end_date': end_date,
+                        "model_path": "",
+                        "api": "",
+                        "numbers": numbers,  
+                        "algorithm":  algorithm,
+                        "model_name": model_name,
+                        "similarity_score": similarity_score,
+                        "similarity_scores": result['similarity_scores']
+                    }
             elif algorithm == 3:
-                result = self.train_recommendation_3(start_date, end_date, similarity_score, fields, org_id)
+                result = self.train_recommendation_3(start_date, end_date, num_neighbor, fields, numbers, org_id)
+                if result['status'] == 200:
+                    recommendation_info = {
+                        "run_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        "org_id": int(org_id),
+                        "is_deleted": False,
+                        "fields": fields,
+                        "start_date": start_date,
+                        'end_date': end_date,
+                        "model_path": "",
+                        "api": "",
+                        "numbers": numbers,
+                        "num_neighbor": num_neighbor, 
+                        "algorithm":  algorithm,
+                        "model_name": model_name,
+                        "similarity_score": similarity_score,
+                        "similarity_scores": result['similarity_scores']
+                    }
 
-            if result['status'] == 200:
-                recommendation_info = {
-                    "run_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    "org_id": int(org_id),
-                    "is_deleted": False,
-                    "fields": fields,
-                    "start_date": start_date,
-                    'end_date': end_date,
-                    "model_path": "",
-                    "api": "",
-                    "numbers": numbers,
-                    "threshold": threshold,
-                    "algorithm":  algorithm,
-                    "model_name": model_name,
-                    "similarity_score": similarity_score,
-                    "similarity_scores": result['similarity_scores']
-                }
-
-                self.save_model_info(recommendation_info, model_name, result)
+            self.save_model_info(recommendation_info, model_name, result)
 
             return {
                 'status': result['status'],
@@ -88,16 +119,21 @@ class ProductRecommendation:
 
         return model_id
 
-    def train_recommendation_1(self, start_date, end_date, similarity_score, fields, org_id):
+    def train_recommendation_1(self, start_date, end_date, similarity_score, org_id):
         try:
-            query = f"""SELECT prod_id, prod_name, prod_category_1 AS prod_category FROM data_product
-                        WHERE inf_org_id = '{org_id}' AND inf_is_deleted = FALSE AND prod_from_date >= '{start_date}' AND prod_from_date <= '{end_date}'
+            query = f"""SELECT a.* FROM (SELECT prod_id, prod_name, prod_category_1 AS prod_category FROM data_product
+                        WHERE inf_org_id = '{org_id}' AND inf_is_deleted = FALSE
                         UNION
                         SELECT prod_id, prod_name, prod_category_2 AS prod_category FROM data_product
-                        WHERE inf_org_id = '{org_id}' AND inf_is_deleted = FALSE AND prod_from_date >= '{start_date}' AND prod_from_date <= '{end_date}'
+                        WHERE inf_org_id = '{org_id}' AND inf_is_deleted = FALSE
                         UNION
                         SELECT prod_id, prod_name, prod_category_3 AS prod_category FROM data_product
-                        WHERE inf_org_id = '{org_id}' AND inf_is_deleted = FALSE AND prod_from_date >= '{start_date}' AND prod_from_date <= '{end_date}'"""
+                        WHERE inf_org_id = '{org_id}' AND inf_is_deleted = FALSE) a
+                        inner join data_transaction_item b on a.prod_id = b.item_id
+                        inner join data_transaction c on b.trans_id = c.trans_id
+                        where c.trans_time between '{start_date}' and '{end_date}'
+                        AND b.inf_org_id = '{org_id}' AND b.inf_is_deleted = FALSE
+                        AND c.inf_org_id = '{org_id}' AND c.inf_is_deleted = FALSE"""
             prod_df = self.db.select_rows_dict(query)
 
             prod_df = pd.pivot_table(data=prod_df, index=['prod_id'], columns='prod_category', values='prod_category', fill_value=0, aggfunc='count').reset_index()
@@ -125,6 +161,7 @@ class ProductRecommendation:
             }
 
         except Exception as error:
+            print(error)
             return {
                 'status': 201,
                 'message': 'Run model failed'
@@ -133,7 +170,7 @@ class ProductRecommendation:
     def train_recommendation_2(self, start_date, end_date, similarity_score, fields, org_id):
         try:
             query = f"""SELECT b.item_id AS prod_id, a.trans_cus_id AS cus_id, COUNT(*) AS purchase_frequency,
-                        SUM(b.ti_quantity) AS quantity,
+                        SUM(b.ti_quantity) AS total_quantity,
                         SUM(b.ti_quantity*COALESCE(NULLIF(c.prod_price, '')::DECIMAL, 0.00)) AS total_revenue
                         FROM data_transaction a
                         INNER JOIN data_transaction_item b
@@ -146,10 +183,9 @@ class ProductRecommendation:
                         AND c.inf_org_id = '{org_id}' AND c.inf_is_deleted = FALSE
                         GROUP BY b.item_id, a.trans_cus_id"""
             prod_df = self.db.select_rows_dict(query)
-
             similarity_scores = []
             prod_df = pd.pivot_table(data=prod_df, index=['prod_id'], columns='cus_id', values=fields, fill_value=0).reset_index()
-
+    
             for product1, product2 in combinations(prod_df['prod_id'], 2):
                 features1 = prod_df.loc[prod_df['prod_id'] == product1].iloc[:, 1:].values
                 features2 = prod_df.loc[prod_df['prod_id'] == product2].iloc[:, 1:].values
@@ -171,15 +207,16 @@ class ProductRecommendation:
                 'similarity_scores': similarity_scores
             }
         except Exception as error:
+            print(error)
             return {
                 'status': 201,
                 'message': 'Run model failed'
             }
 
-    def train_recommendation_3(self, start_date, end_date, similarity_score, fields, org_id):
+    def train_recommendation_3(self, start_date, end_date, num_neighbor, fields, numbers, org_id):
         try:
             query = f"""SELECT b.item_id AS prod_id, a.trans_cus_id AS cus_id, COUNT(*) AS purchase_frequency,
-                        SUM(b.ti_quantity) AS quantity,
+                        SUM(b.ti_quantity) AS total_quantity,
                         SUM(b.ti_quantity*COALESCE(NULLIF(c.prod_price, '')::DECIMAL, 0.00)) AS total_revenue
                         FROM data_transaction a
                         INNER JOIN data_transaction_item b
@@ -192,21 +229,37 @@ class ProductRecommendation:
                         AND c.inf_org_id = '{org_id}' AND c.inf_is_deleted = FALSE
                         GROUP BY b.item_id, a.trans_cus_id"""
             prod_df = self.db.select_rows_dict(query)
-
             matrix = prod_df.pivot_table(index='cus_id', columns='prod_id', values=fields, fill_value=0)
-            k = int(similarity_score)
+            k = int(num_neighbor)
             model = NearestNeighbors(n_neighbors=k, metric='cosine')
             model.fit(matrix)
 
+            distances, indices = model.kneighbors(matrix)
+            # Initialize an empty dictionary
+            neighbors_dict = {}
+
+            # Iterate over the matrix.index
+            for i, cus_id in enumerate(matrix.index):
+                # Get the corresponding indices from the indices array
+                indice = indices[i]
+                similar_users = matrix.index[indice.flatten()]
+                predicted_freqs = matrix.loc[similar_users].mean(axis=0)
+
+                # lấy danh sách sản phẩm cần gợi ý và số lần mua được dự đoán
+                recommended_id = predicted_freqs.sort_values(ascending=False).index.tolist()[:int(numbers)]
+
+                # Add the cus_id and its neighbors to the dictionary
+                neighbors_dict[cus_id] = recommended_id
             return {
                 'status': 200,
                 'message': 'Run recommendation finished',
                 'similarity_scores': [],
                 'model': model,
-                'matrix': matrix.to_dict(orient='index')
+                'matrix': neighbors_dict
             }
 
         except Exception as error:
+            print(error)
             return {
                 'status': 201,
                 'message': 'Run model failed'
@@ -269,18 +322,20 @@ class ProductRecommendation:
                         if prod_2 not in scores:
                             scores[str(prod_2)] = 0
                         scores[prod_2] = scores[prod_2] + score*weight
-
             n = config['numbers']
             sorted_list = [key for key, value in sorted(scores.items(), key=lambda item: item[1], reverse=True)]
             recommended_id = sorted_list[:n]
-            recommended_id_str = ', '.join(["'" + x + "'" for x in recommended_id])
+            recommended_df = []
 
-            query = f"""select distinct prod_id, prod_name
-                        from data_product
-                        where prod_id in ({recommended_id_str}) 
-                        and inf_org_id = '{org_id}' and inf_is_deleted = FALSE"""
+            if (len(recommended_id)):
+                recommended_id_str = ', '.join(["'" + x + "'" for x in recommended_id])
+
+                query = f"""select distinct prod_id, prod_name
+                            from data_product
+                            where prod_id in ({recommended_id_str}) 
+                            and inf_org_id = '{org_id}' and inf_is_deleted = FALSE"""
             
-            recommended_df = self.db.select_rows_dict(query).to_dict(orient='records')
+                recommended_df = self.db.select_rows_dict(query).to_dict(orient='records')
 
             result = {
                     'status': 200,
@@ -289,7 +344,8 @@ class ProductRecommendation:
                         'info': {
                             'title': 'List of recommended products',
                             'data': recommended_df
-                        }
+                        },
+                        'value': recommended_df
                     }
                 }
             
@@ -333,14 +389,17 @@ class ProductRecommendation:
             n = config['numbers']
             sorted_list = [key for key, value in sorted(scores.items(), key=lambda item: item[1], reverse=True)]
             recommended_id = sorted_list[:n]
-            recommended_id_str = ', '.join(["'" + x + "'" for x in recommended_id])
+            recommended_df = []
 
-            query = f"""select distinct prod_id, prod_name
-                        from data_product
-                        where prod_id in ({recommended_id_str})
-                        and inf_org_id = '{org_id}' and inf_is_deleted = FALSE"""
+            if (len(recommended_id)):
+                recommended_id_str = ', '.join(["'" + x + "'" for x in recommended_id])
+
+                query = f"""select distinct prod_id, prod_name
+                            from data_product
+                            where prod_id in ({recommended_id_str}) 
+                            and inf_org_id = '{org_id}' and inf_is_deleted = FALSE"""
             
-            recommended_df = self.db.select_rows_dict(query).to_dict(orient='records')
+                recommended_df = self.db.select_rows_dict(query).to_dict(orient='records')
 
             result = {
                     'status': 200,
@@ -349,7 +408,8 @@ class ProductRecommendation:
                         'info': {
                             'title': 'List of recommended products',
                             'data': recommended_df
-                        }
+                        },
+                        'value': recommended_df
                     }
                 }
             
@@ -363,27 +423,19 @@ class ProductRecommendation:
 
     def get_recommended_products_3(self, config, cus_id, org_id):
         try:
-            # dự đoán số lần mua của user mới với tất cả các sản phẩm
-            matrix = pd.DataFrame.from_dict(self, config['matrix'], orient='index')
-            model_path = config['model_path']
-            numbers = config['numbers']
-            model = joblib.load(model_path)
-            
-            new_user = matrix.loc[cus_id].values.reshape(1, -1)
-            distances, indices = model.kneighbors(new_user)
-            similar_users = matrix.index[indices.flatten()]
-            predicted_freqs = matrix.loc[similar_users].mean(axis=0)
-
             # lấy danh sách sản phẩm cần gợi ý và số lần mua được dự đoán
-            recommended_id = predicted_freqs.sort_values(ascending=False).index.tolist()[:numbers]
-            recommended_id_str = ', '.join(["'" + x + "'" for x in recommended_id])
+            recommended_id = config['matrix'][cus_id]
+            recommended_df = []
 
-            query = f"""select distinct prod_id, prod_name
-                        from data_product
-                        where prod_id in ({recommended_id_str})
-                        and inf_org_id = '{org_id}' and inf_is_deleted = FALSE """
+            if (len(recommended_id)):
+                recommended_id_str = ', '.join(["'" + x + "'" for x in recommended_id])
+
+                query = f"""select distinct prod_id, prod_name
+                            from data_product
+                            where prod_id in ({recommended_id_str}) 
+                            and inf_org_id = '{org_id}' and inf_is_deleted = FALSE"""
             
-            recommended_df = self.db.select_rows_dict(query).to_dict(orient='records')
+                recommended_df = self.db.select_rows_dict(query).to_dict(orient='records')
 
             result = {
                     'status': 200,
@@ -392,12 +444,14 @@ class ProductRecommendation:
                         'info': {
                             'title': 'List of recommended products',
                             'data': recommended_df
-                        }
+                        },
+                        'value': recommended_df
                     }
                 }
             
             return result
         except Exception as error:
+            print(error)
             return {
                 'status': 201,
                 'message': 'Get results failed'

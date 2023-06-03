@@ -57,6 +57,11 @@ export default () => {
     history.push(url);
   };
 
+  const handleImportFile = (e) => {
+    const url = `/data-management/import-file/${itemType}`;
+    history.push(url);
+  };
+
   const handleNewItem = () => {
     const url = `/data-management/new-template/${itemType}`;
     history.push(url);
@@ -92,6 +97,13 @@ export default () => {
         </Row>
         <Row>
           <Col xs={9} className="mb-4">
+              <Button
+                variant="secondary"
+                className="m-1"
+                onClick={() => handleImportFile()}
+              >
+                Import File
+              </Button>
             {isViewDetail ? (
               <Button
                 variant="primary"

@@ -83,8 +83,8 @@ correlation_dimensions = [
             "label": 'Customer account age'
         }, 
         {
-            "id": 'trans_time',
-            "label": 'Transaction time'
+            "id": 'trans_hour',
+            "label": 'Transaction hour'
         }, 
         {
             "id": 'total_revenue',
@@ -93,160 +93,193 @@ correlation_dimensions = [
 
 @api_view(['GET'])
 def get_model_config(request, model_type):
-    config = []
+    config = {}
     end_date = datetime.today().strftime('%Y-%m-%d')
     start_date = (datetime.strptime(end_date, '%Y-%m-%d') - timedelta(days=365)).strftime('%Y-%m-%d')
+    general_parameters = {
+        'model_name': {
+            'id': 'model_name',
+            'label': 'Model name',
+            'type': 'text',
+            'value': ''
+        }, 
+        'start_date': {
+            'id': 'start_date',
+            'label': 'Data from',
+            'type': 'date',
+            'value': start_date
+        }, 
+        'end_date': {
+            'id': 'end_date',
+            'label': 'Data to',
+            'type': 'date',
+            'value': end_date
+        }
+    }
 
     if (model_type == 'customer-segmentation'):
         fields = ['cus_gender', 'cus_location', 'cus_age', 'cus_account_age', 'cus_revenue']
-        config = [
-            {
-                'id': 'model_name',
-                'label': 'Model name',
-                'type': 'text',
-                'value': ''
-            },
-            {
+        parameters = {
+            'num_clusters': {
                 'id': 'num_clusters',
                 'label': 'Number of clusters',
                 'type': 'integer',
                 'value': 3
-            }, {
-                'id': 'start_date',
-                'label': 'Data from',
-                'type': 'date',
-                'value': start_date
-            }, {
-                'id': 'end_date',
-                'label': 'Data to',
-                'type': 'date',
-                'value': end_date
-            }, {
+            }, 
+            'columns': {
                 'id': 'columns',
                 'label': 'Fields used to segment',
                 'type': 'multi-select',
                 'options': fields,
                 'value': []
             }
-        ]
+        }
+
+        config = [
+                {   
+                    'id': 'customer_segmentation',
+                    'name': 'Customer Segmentation',
+                    'parameters': [
+                        general_parameters['model_name'],
+                        parameters['num_clusters'],
+                        parameters['columns'], 
+                        general_parameters['start_date'],
+                        general_parameters['end_date']]
+                }
+            ]
 
     elif (model_type == 'product-recommendation'):
-        algorithms = [{"id": key, "label": recommendation_algorithms[key]} for key in recommendation_algorithms.keys()]
         fields = ['total_revenue', 'purchase_frequency', 'total_quantity']
-        config = [
-            {
-                'id': 'algorithm',
-                'label': 'Algorithm',
-                'type': 'select',
-                'options': algorithms,
-                'value': algorithms[0]['id']
-            },
-            {
+        parameters = {
+            'similarity_score': {
                 'id': 'similarity_score',
                 'label': 'Min similarity score',
                 'type': 'float',
                 'value': 0.3
             },
-            {
+            'threshold': {
                 'id': 'threshold',
                 'label': 'Recommended threshold',
                 'type': 'float',
                 'value': 0.5
             },
-            {
+            'numbers': {
                 'id': 'numbers',
                 'label': 'Number of recommended products',
                 'type': 'integer',
                 'value': 5
-            }, {
-                'id': 'start_date',
-                'label': 'Data from',
-                'type': 'date',
-                'value': start_date
-            }, {
-                'id': 'end_date',
-                'label': 'Data to',
-                'type': 'date',
-                'value': end_date
-            }, {
+            }, 
+            'fields': {
                 'id': 'fields',
-                'label': 'Fields used to run algorithm',
+                'label': 'Field used to run algorithm',
                 'type': 'select',
                 'options': fields,
                 'value': fields[0]
             }, 
-            {
-                'id': 'model_name',
-                'label': 'Model name',
-                'type': 'text',
-                'value': ''
+            'num_neighbor': {
+                'id': 'num_neighbor',
+                'label': 'Number of similar neighbors',
+                'type': 'integer',
+                'value': 5
+            }
+        }
+     
+        config = [{
+                "id": "1", 
+                "name": "Content-based",
+                'parameters': [
+                    general_parameters['model_name'],
+                    parameters['similarity_score'],
+                    parameters['numbers'],
+                    general_parameters['start_date'],
+                    general_parameters['end_date'],
+                ]
             },
+            {
+                "id": "2" ,
+                "name": "Item-item collaborative filtering",
+                'parameters': [
+                    general_parameters['model_name'],
+                    parameters['similarity_score'],
+                    parameters['numbers'],
+                    parameters['fields'],
+                    general_parameters['start_date'],
+                    general_parameters['end_date'],
+                ]
+            }, 
+            {
+                "id": "3",
+                "name": "User-user collaborative filtering",
+                'parameters': [
+                    general_parameters['model_name'],
+                    parameters['num_neighbor'],
+                    parameters['numbers'],
+                    parameters['fields'],
+                    general_parameters['start_date'],
+                    general_parameters['end_date'],
+                ]
+            }
         ]
     
     elif (model_type == 'association-rule'):
-        config = [
-            {
+        parameters = {
+            'min_support': {
                 'id': 'min_support',
                 'label': 'Min support',
                 'type': 'float',
                 'value': 0.01
             },
-            {
+            'threshold': {
                 'id': 'threshold',
                 'label': 'Confidence threshold',
                 'type': 'float',
                 'value': 0.9
-            }, {
-                'id': 'start_date',
-                'label': 'Data from',
-                'type': 'date',
-                'value': start_date
-            }, {
-                'id': 'end_date',
-                'label': 'Data to',
-                'type': 'date',
-                'value': end_date
-            },
-            {
-                'id': 'model_name',
-                'label': 'Model name',
-                'type': 'text',
-                'value': ''
-            },
-        ]
+            }, 
+        }
+
+        config = [
+                    {
+                        "id": "association_rule",
+                        "name": "Association Rule",
+                        "parameters": [
+                            general_parameters['model_name'],
+                            parameters['min_support'],
+                            parameters['threshold'],
+                            general_parameters['start_date'],
+                            general_parameters['end_date'],
+                        ]
+                    }
+                ]
 
     elif (model_type == 'correlation'):
-        config = [
-            {
-                'id': 'start_date',
-                'label': 'Data from',
-                'type': 'date',
-                'value': start_date
-            }, {
-                'id': 'end_date',
-                'label': 'Data to',
-                'type': 'date',
-                'value': end_date
-            },
-            {
-                'id': 'model_name',
-                'label': 'Model name',
-                'type': 'text',
-                'value': ''
-            },
-            {
+        parameters = {
+            'dimension': {
                 'id': 'dimension',
                 'label': 'Dimension',
                 'type': 'multi-select',
                 'options': correlation_dimensions,
                 'value': []
             },
+        }
+
+        config = [ 
+            {
+                "id": "correlation",
+                "name": "Correlation",
+                "parameters": [
+                    general_parameters['model_name'],
+                    parameters['dimension'],
+                    general_parameters['start_date'],
+                    general_parameters['end_date'],
+                ]
+            }
         ]
         
     return Response({
         'status': 200,
         'config': config
     })
+
 
 @api_view(['GET'])
 def get_list_models(request, model_type):
@@ -267,7 +300,7 @@ def get_list_models(request, model_type):
 
         elif model_type == 'product-recommendation':
             excluded_fields = ['_id', 'org_id', 'is_deleted', 'model_path']
-            key_order = ['id', 'model_name', 'algorithm', 'fields', 'threshold', 'numbers', 'start_date', 'end_date', 'run_at', 'api']
+            key_order = ['id', 'model_name', 'algorithm', 'fields', 'threshold', 'numbers', 'num_neighbor', 'start_date', 'end_date', 'run_at', 'api']
             for row in rows:
                 if type(row['fields']) == list:
                     row['fields'] = list_to_string(row['fields'])
@@ -476,8 +509,9 @@ def get_info_api(request, model_type, model_id, item_id):
                 elif (model_type == 'product-recommendation'):
                     model = ProductRecommendation(db, mongo_db)
                     result = model.get_recommended_products(model_id, item_id, org_id)
-                elif (model_type == 'association-rule'):
-                    result = get_association_rule(model_id, item_id, org_id)
+                elif (model_type == 'association-rules'):
+                    model = AssociationRule(db, mongo_db)
+                    result = model.get_association_rule(model_id, item_id, org_id)
 
                 return Response(result)
             except Exception as error:
@@ -542,12 +576,13 @@ def run_recommendation(request):
         model_name = body.get('model_name', '')
         fields = body.get('fields', 'purchase_frequency')
         threshold = body.get('threshold', 0.5)
+        num_neighbor = body.get('num_neighbor', 5)
         numbers = body.get('numbers', 5)
         end_date = body.get('end_date', datetime.today().strftime('%Y-%m-%d'))
         start_date = body.get('start_date', (datetime.strptime(end_date, '%Y-%m-%d') - timedelta(days=365*40)).strftime('%Y-%m-%d'))
         
         model = ProductRecommendation(db, mongo_db)
-        result = model.train_recommendation(algorithm, similarity_score, model_name, fields, threshold, numbers, end_date, start_date, org_id)
+        result = model.train_recommendation(algorithm, similarity_score, model_name, fields, num_neighbor, threshold, numbers, end_date, start_date, org_id)
         return result
 
     except Exception as error:

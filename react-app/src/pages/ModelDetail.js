@@ -260,13 +260,23 @@ const RecommendationForm = ({itemType, itemId, setAlertValue}) => {
         <Form.Control type="text" value={info.similarity_score} readOnly/>
       </Form.Group>
       <Form.Group className="mb-3 col-6">
-        <Form.Label>Recommended threshold: </Form.Label>
-        <Form.Control type="text" value={info.threshold} readOnly/>
-      </Form.Group>
-      <Form.Group className="mb-3 col-6">
-        <Form.Label>number of recommended products: </Form.Label>
+        <Form.Label>Number of recommended products: </Form.Label>
         <Form.Control type="text" value={info.numbers} readOnly/>
       </Form.Group>
+      {
+        info.num_neighbor ? 
+        <Form.Group className="mb-3 col-6">
+        <Form.Label>Number of similar neighbors: </Form.Label>
+        <Form.Control type="text" value={info.num_neighbor} readOnly/>
+        </Form.Group> : <></>
+      }
+      {
+        info.fields ? 
+        <Form.Group className="mb-3 col-6">
+        <Form.Label>Fields to info: </Form.Label>
+        <Form.Control type="text" value={info.fields} readOnly/>
+        </Form.Group> : <></>
+      }
       <Form.Group className="mb-3 col-6">
         <Form.Label>Data from: </Form.Label>
         <Form.Control type="text" value={info.start_date} readOnly/>
@@ -278,10 +288,6 @@ const RecommendationForm = ({itemType, itemId, setAlertValue}) => {
       <Form.Group className="mb-3 col-6">
         <Form.Label>Run at: </Form.Label>
         <Form.Control type="text" value={info.run_at} readOnly/>
-      </Form.Group>
-      <Form.Group className="mb-3 col-6">
-        <Form.Label>Fields to info: </Form.Label>
-        <Form.Control type="text" value={info.fields} readOnly/>
       </Form.Group>
       <Form.Group className="mb-3 col-6">
         <Form.Label>API used for recommendation:</Form.Label>

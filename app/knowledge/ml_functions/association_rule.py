@@ -25,6 +25,68 @@ class AssociationRule:
             'api': os.environ.get("REACT_APP_BE_SERVER", "") + f'/knowledge/get-info-api/association-rules/{model_id}/<product_id>'
         })
 
+    def get_association_rule(self, model_id, item_id, org_id):
+        try:
+            check_item_exist = check_item_org(self.db, item_id, org_id, 'data_product', 'prod_id')
+            if not check_item_exist:
+                return {
+                    'status': 201,
+                    'message': 'Customer Product invalid'
+                }
+            
+            doc_id = ObjectId(model_id)
+            config =  self.mongo_db.find_one('association-rule', { 'org_id': int(org_id), 'is_deleted': False, '_id': doc_id})
+            rules = config['rules']
+            itemsets = self.find_rules_with_product_id(rules, item_id)
+            itemset_df = []
+            itemset_str_df = []
+
+            for idx, itemset in enumerate(itemsets):
+                itemset_str = ', '.join(["'" + x + "'" for x in itemset])
+
+                query = f"""select distinct prod_id, prod_name
+                            from data_product
+                            where prod_id in ({itemset_str}) 
+                            and inf_org_id = '{org_id}' and inf_is_deleted = FALSE"""
+            
+                df = self.db.select_rows_dict(query).to_dict(orient='records')
+                itemset_df.append(df)
+                itemset_str_df.append({
+                    'ID': idx,
+                    'Itemsets': ', '.join(["'" + x['prod_name'] + "'" for x in df])})
+
+            return {
+                    'status': 200,
+                    'result': {
+                        'type': 'table',
+                        'info': {
+                            'title': 'List of itemsets',
+                            'data': itemset_str_df
+                        },
+                        'value': itemset_df
+                    }
+            }
+        
+        except Exception as error:
+            return {
+                'status': 201,
+                'message': 'Get results failed'
+            }
+        
+    def find_rules_with_product_id(self, rules, product_id):
+        matching_rules = [rule for rule in rules if product_id in rule]
+
+        sorted_rules = []
+        for rule in matching_rules:
+            if product_id in rule:
+                rule.remove(product_id)  # Remove the product_id from the rule
+                rule.insert(0, product_id)  # Insert the product_id at the first position
+                rule.sort()  # Sort the rule
+                if rule not in sorted_rules:  # Add the rule if it's not a duplicate
+                    sorted_rules.append(rule)
+
+        return sorted_rules
+
     def train_association_rule(self, model_name, min_support, threshold, end_date, start_date, org_id):
         try:
             # Load dataframes
@@ -54,25 +116,24 @@ class AssociationRule:
             # Create list of transactions
             transactions = df.groupby(['trans_id', 'prod_id'])['prod_id'].count().unstack().reset_index().fillna(0).set_index('trans_id')
             transactions = transactions.applymap(lambda x: 1 if x > 0 else 0).astype(bool)
-
             # Generate frequent itemsets
             frequent_itemsets = apriori(transactions, min_support=min_support, use_colnames=True)
-
-            # Generate association rules
-            rules = association_rules(frequent_itemsets, metric="lift", min_threshold=threshold)
-
-            # Sort rules by confidence and lift
-            rules = rules.sort_values(['confidence', 'lift'], ascending=[False, False])
-
-            # Create list of lists
             result = []
-            for i in range(len(rules)):
-                antecedents = list(rules.iloc[i]['antecedents'])
-                consequents = list(rules.iloc[i]['consequents'])
-                itemset = []
-                for item in antecedents + consequents:
-                    itemset.append(item)
-                result.append(itemset)
+            if len(frequent_itemsets):
+                # Generate association rules
+                rules = association_rules(frequent_itemsets, metric="lift", min_threshold=threshold)
+
+                # Sort rules by confidence and lift
+                rules = rules.sort_values(['confidence', 'lift'], ascending=[False, False])
+
+                # Create list of lists
+                for i in range(len(rules)):
+                    antecedents = list(rules.iloc[i]['antecedents'])
+                    consequents = list(rules.iloc[i]['consequents'])
+                    itemset = []
+                    for item in antecedents + consequents:
+                        itemset.append(item)
+                    result.append(itemset)
 
             rule_info = {
                 "run_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -82,7 +143,7 @@ class AssociationRule:
                 'end_date': end_date,
                 "model_path": "",
                 "api": "",
-                "model_name": model_name if model_name != '' else f'MODEL_{model_id}',
+                "model_name": model_name,
                 "threshold": threshold,
                 "min_support": min_support,
                 "rules": result,

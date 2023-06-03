@@ -14,35 +14,67 @@ import { useHistory, useLocation } from "react-router";
 import { TabTitle } from "../constants/generalFunctions";
 import { AppContext } from "./AppContext";
 
+
 const FieldsConfig = ({itemType, setAlertValue}) => {
   const {fetchRequest} = useContext(AppContext);
+  const [algorithm, setAlgorithm] = useState('');
+  const [inputs, setInputs] = useState([]);
   const [config, setConfig] = useState([]);
 
   useEffect(() => {
     fetchRequest(`knowledge/get-model-config/${itemType}`, 'GET')
+      .then((data) => {
+        if (data !== undefined && data.status === 200) {
+          setConfig(data.config);
+          setAlgorithm(data.config[0].id); // Set default algorithm state from fetched config
+          setInputs(data.config[0].parameters); // Set default inputs state from fetched config
+        }
+      })
+      .catch((err) => alert(err));
+  }, []);
+
+  const handleAlgorithmChange = (event) => {
+    const selectedAlgorithm = event.target.value;
+    const selectedConfig = config.find((item) => item.id === selectedAlgorithm);
+
+    setAlgorithm(selectedAlgorithm);
+    setInputs(selectedConfig ? selectedConfig.parameters : []);
+  };
+
+  const handleFormSubmit = (event) => {
+    event.preventDefault();
+    const formData = {};
+    inputs.forEach((field) => {
+      formData[field.id] = field.value;
+    });
+    formData['algorithm'] = algorithm;
+
+    fetchRequest(`knowledge/run-model/${itemType}`, 'POST', 
+      JSON.stringify(formData)
+    )
     .then((data) => {
       if (data != undefined) {
         if (data.status == 200) {
-          setConfig(data.config)
+          setAlertValue(true, true, 'Build model successfully')
+        } else {
+          setAlertValue(true, false, 'Build model unsuccessfully')
         }
       }
     }).catch((err) => alert(err));
-  }, []);
-
-  const handleInputChange = (event, id) => {
-    // Update form config with new value
-    const newConfig = [...config];
-    const index = newConfig.findIndex((field) => field.id === id);
-    if (event.target.type === 'select-multiple') {
-      const selectedOptions = Array.from(event.target.selectedOptions, (option) => option.value);
-      newConfig[index].value = selectedOptions;
-    } else {
-      newConfig[index].value = event.target.value;
-    }
-    setConfig(newConfig);
   };
 
-  const renderField = (field) => {
+  const handleInputChange = (event, inputId) => {
+    const updatedInputs = [...inputs];
+    // Find the input with the matching ID
+    const input = updatedInputs.find(input => input.id === inputId);
+    if (input) {
+      // Update the input's value
+      input.value = event.target.value;
+      setInputs(updatedInputs);
+    }
+  };
+
+    const renderField = (field) => {
     switch (field.type) {
       case 'integer':
         return (
@@ -52,6 +84,7 @@ const FieldsConfig = ({itemType, setAlertValue}) => {
               type="number"
               step="1"
               value={field.value}
+              required
               onChange={(event) => handleInputChange(event, field.id)}
             />
           </Form.Group>
@@ -62,6 +95,7 @@ const FieldsConfig = ({itemType, setAlertValue}) => {
             <Form.Label>{field.label}</Form.Label>
             <Form.Control
               type="number"
+              required
               value={field.value}
               onChange={(event) => handleInputChange(event, field.id)}
             />
@@ -73,6 +107,7 @@ const FieldsConfig = ({itemType, setAlertValue}) => {
             <Form.Label>{field.label}</Form.Label>
             <Form.Control
               type="date"
+              required
               value={field.value}
               onChange={(event) => handleInputChange(event, field.id)}
             />
@@ -84,6 +119,7 @@ const FieldsConfig = ({itemType, setAlertValue}) => {
             <Form.Label>{field.label}</Form.Label>
             <Form.Control
               as="select"
+              required
               value={field.value}
               onChange={(event) => handleInputChange(event, field.id)}
             >
@@ -127,6 +163,7 @@ const FieldsConfig = ({itemType, setAlertValue}) => {
             <Form.Label>{field.label}</Form.Label>
             <Form.Control
               type="text"
+              required
               value={field.value}
               onChange={(event) => handleInputChange(event, field.id)}
             />
@@ -135,28 +172,28 @@ const FieldsConfig = ({itemType, setAlertValue}) => {
     }
   };
 
-  const handleFormSubmit = (event) => {
-    event.preventDefault();
-    const formData = {};
-    config.forEach((field) => {
-      formData[field.id] = field.value;
-    });
-
-    fetchRequest(`knowledge/run-model/${itemType}`, 'POST', 
-      JSON.stringify(formData)
-    )
-    .then((data) => {
-      if (data != undefined) {
-        if (data.status == 200) {
-          setAlertValue(true, true, 'Build model successfully')
-        }
-      }
-    }).catch((err) => alert(err));
-  }
-
   return (
     <Form className="row" onSubmit={handleFormSubmit}>
-      {config.map((field) => renderField(field))}
+      <Form.Group className="mb-3 col-6">
+        <Form.Label>Algorithm</Form.Label>
+        <Form.Control
+          as="select"
+          value={algorithm}
+          onChange={(event) => {
+            handleAlgorithmChange(event);
+          }}
+        >
+          {config.map((item, index) => (
+            <option key={index} value={item.id}>
+              {item.name}
+            </option>
+          ))}
+        </Form.Control>
+      </Form.Group>
+      {
+        inputs ? 
+        <>{inputs.map((field) => renderField(field))}</> : <></>
+      }
       <div className="row"> 
         <div className="col text-center">
           <Button variant="primary" type="submit" className="m-1">

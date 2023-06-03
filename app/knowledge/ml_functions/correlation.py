@@ -66,11 +66,11 @@ class Correlation:
                 where inf_org_id = '{org_id}' and inf_is_deleted = FALSE
             """)
             transaction_df = self.db.select_rows_dict(f"""
-                select trans_id, trans_cus_id as cus_id, trans_time, 
-                trans_revenue_value, trans_tax_value, 
+                select trans_id, trans_cus_id as cus_id, EXTRACT(HOUR from trans_time) as trans_hour, 
+                trans_revenue_value as total_revenue, trans_tax_value, 
                 trans_refund_value, trans_shipping_value
                 from data_transaction
-                where inf_org_id = '{org_id}' and inf_is_deleted = FALSE
+                where inf_org_id = '{org_id}' and inf_is_deleted = FALSE and trans_time between '{start_date}' and '{end_date}'
             """)
             transaction_item_df = self.db.select_rows_dict(f"""
                 select trans_id, item_id as prod_id, ti_quantity
@@ -78,11 +78,14 @@ class Correlation:
                 where inf_org_id = '{org_id}' and inf_is_deleted = FALSE
             """)
 
+            
             # Calculate the correlation between product category and total revenue
             # Merge transaction_item_df and product_df on prod_id column
-            age_price_df = (transaction_df.merge(customer_df, on='cus_id')
+            total_df = (transaction_df.merge(customer_df, on='cus_id')
                                 .merge(transaction_item_df, on='trans_id')
-                                .merge(product_df, on='prod_id')[dimensions])
+                                .merge(product_df, on='prod_id'))
+         
+            age_price_df = (total_df[dimensions]).astype(float)
             
             corr_age_price = age_price_df.corr()
 
@@ -108,7 +111,6 @@ class Correlation:
                 }
 
         except Exception as error:
-            print(error)
             return {
                 'status': 201,
                 'message': 'Run correlation failed'
