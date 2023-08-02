@@ -58,11 +58,19 @@ services:
     volumes:
       - mongodb_data:/data/db
 
-
-
 volumes:
-  postgres_data2:
   postgres_data:
+  postgres_data2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/postgres
   mongodb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/mongo
 
 

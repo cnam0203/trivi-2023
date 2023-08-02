@@ -122,9 +122,6 @@ def change_password(request):
         confirmed_password = body['confirmedPassword']
 
         if (not check_password(old_password, password)):
-            print(password)
-            print(make_password(old_password))
-            print(old_password)
             message = 'You provided wrong old password'
         elif (new_password != confirmed_password):
             message = 'Confirmed password must match with new password'

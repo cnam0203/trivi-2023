@@ -92,7 +92,6 @@ export default () => {
       quotes: true,
       skipEmptyLines: true
     });
-    console.log(csvString);
     const csvData = new Blob([csvString], { type: 'text/csv' });
     const formData = new FormData();
     formData.append('csvFile', csvData, 'data.csv');

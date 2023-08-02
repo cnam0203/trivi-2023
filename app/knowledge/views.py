@@ -33,6 +33,7 @@ import pandas as pd
 from .ml_functions.customer_segmentation import CustomerSegmentation;
 from .ml_functions.product_recommendation import ProductRecommendation;
 from .ml_functions.association_rule import AssociationRule;
+from .ml_functions.intelligent_answer import IntelligentAnswer;
 from .ml_functions.correlation import Correlation;
 
 # Recommendation
@@ -279,7 +280,6 @@ def get_model_config(request, model_type):
         'status': 200,
         'config': config
     })
-
 
 @api_view(['GET'])
 def get_list_models(request, model_type):
@@ -636,3 +636,27 @@ def run_correlation(request):
             'status': 201,
             'message': 'Run correlation failed'
         }
+
+@api_view(['POST'])
+def get_answer(request):
+    try: 
+        user_serializer = UserSerializer(request.user)
+        org_id = user_serializer.data['org_id']
+        data = json.loads(request.body)
+        question = data['question']
+
+        result = {
+            'status': 201,
+            'message': 'Get results failed'
+        }
+        
+        model = IntelligentAnswer(org_id, db)
+        result = model.answer(question)
+
+        return Response(result)
+    except Exception as error:
+        print(error)
+        return Response({
+            'status': 201,
+            'message': 'Get results failed'
+        })

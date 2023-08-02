@@ -1,5 +1,6 @@
 .env.prod
 .env.prod.db
+data/*
 app/mediafiles
 react-app/node_modules
 react-app/gitignore

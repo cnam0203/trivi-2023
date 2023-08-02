@@ -65,7 +65,7 @@ export const PageVisitsTable = ({pages}) => {
   );
 };
 
-export const PageCustomizedTable = ({info, width=4, isShowHeader=false}) => {
+export const PageCustomizedTable = ({info, width=4, isShowHeader=false, isViewAll=false}) => {
   const TableRow = ({row}) => {
 
     return (
@@ -81,7 +81,7 @@ export const PageCustomizedTable = ({info, width=4, isShowHeader=false}) => {
 
   const {title, data} = info;
   const columnHeaders = Object.keys(data[0] ? data[0] : {});
-  const [isAll, setAll] = useState(false);
+  const [isAll, setAll] = useState(isViewAll);
 
   return (
     <Col xs={12} xl={width} className="mb-4">

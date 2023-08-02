@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell, faCog, faEnvelopeOpen, faHouseUser, faSearch, faSignOutAlt, faUserShield } from "@fortawesome/free-solid-svg-icons";
 import { faUserCircle } from "@fortawesome/free-regular-svg-icons";
 import { Row, Col, Nav, Form, Image, Navbar, Dropdown, Container, ListGroup, InputGroup } from '@themesberg/react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { Routes } from '../routes';
 
 
@@ -14,31 +14,27 @@ import Profile3 from "../assets/img/team/profile-picture-3.jpg";
 import { AppContext } from "../pages/AppContext";
 
 export default (props) => {
-  // const {fetchRequest} = useContext(AppContext);
-  // const [userName, setUserName] = useState('');
-  // const [orgName, setOrgName] = useState('');
 
-  // useEffect(() => {
-  //   fetchRequest(`auth/user-info`, 'GET')
-  //   .then((data) => {
-  //     if (data != undefined) {
-  //       setUserName(data.username);
-  //       setOrgName(data.org_name);
-  //     }
-  //   }).catch((err) => alert(err));
-  // }, []);
+  const [searchQuery, setSearchQuery] = useState('');
+  const history = useHistory();
 
+  const handleFormSubmit = (event) => {
+    event.preventDefault();
+    history.push(`/data-knowledge/search-result?query=${searchQuery}`);
+  };
 
   return (
     <Navbar variant="dark" expanded className="ps-0 pe-2 pb-0">
       <Container fluid className="px-0">
         <div className="d-flex justify-content-between w-100">
           <div className="d-flex align-items-center">
-            <Form className="navbar-search">
-              <Form.Group id="topbarSearch">
-                <InputGroup className="input-group-merge search-bar">
+            <Form className="navbar-search" onSubmit={handleFormSubmit}>
+              <Form.Group id="topbarSearch" style={{width: '500px'}}>
+                <InputGroup className="input-group-merge search-bar" required>
                   <InputGroup.Text><FontAwesomeIcon icon={faSearch} /></InputGroup.Text>
-                  <Form.Control type="text" placeholder="Make a question about your data" />
+                  <Form.Control type="text" placeholder="Make a question about your data" 
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}/>
                 </InputGroup>
               </Form.Group>
             </Form>

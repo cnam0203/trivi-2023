@@ -48,6 +48,7 @@ export const Routes = {
     ModelDetail: {path: "/data-knowledge/detail/"},
     ModelRun: {path: "/data-knowledge/run/"},
     TestAPI: {path: "/data-knowledge/test-api/"},
+    SearchResult: {path: "/data-knowledge/search-result"},
     CustomerSegmentation: { path: "customer-segmentation"},
     ProductRecommendation: { path: "product-recommendation"},
     AssociationRule: { path: "association-rule"},

@@ -26,6 +26,7 @@ import ListModels from './ListModels';
 import ModelDetail from './ModelDetail';
 import NewModel from './NewModel';
 import TestAPI from './TestAPI';
+import SearchResult from './SearchResult';
 
 // components
 import Sidebar from "../components/Sidebar";
@@ -205,6 +206,10 @@ export default () => (
     <RouteWithSidebar
       path={Routes.TestAPI.path}
       component={TestAPI}
+    />
+    <RouteWithSidebar
+      path={Routes.SearchResult.path}
+      component={SearchResult}
     />
     <RouteWithSidebar
       exact
