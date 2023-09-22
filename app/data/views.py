@@ -1053,12 +1053,20 @@ def get_matching_template(request, item_type):
         include_fields = get_include_fields(model_fields, exclude_fields)
 
         items = Matching_Template.objects.filter(inf_org_id=org_id, inf_is_deleted=False, templ_table=item_type).order_by('-inf_created_at').values(*include_fields)
+
+
+        Model = apps.get_model(app_label='data', model_name=item_type)
+        item_model_fields = [f.name for f in Model._meta.get_fields()]
+        item_exclude_fields = ['id', 'inf_org_id', 'inf_import_id', 'inf_is_deleted', 'inf_created_at']
+        item_include_fields = get_include_fields(item_model_fields, item_exclude_fields)
+
         return Response({
             'status': 200,
             'message': 'Get list data successfully',
             'item_tye': item_type,
             'items': items,
-            'isViewDetail': True
+            'isViewDetail': True,
+            'listFields': item_include_fields,
         })
     except Exception as error:
         return Response({
@@ -1118,6 +1126,7 @@ def get_list_templates(item_type, org_id):
             'name': templ_name,
             'listMatchFields': list_match_fields
         })
+
         
     return templates
    
@@ -1144,11 +1153,20 @@ def get_import_file_info(request, item_type):
         org_id = user_serializer.data['org_id']
 
         templates = get_list_templates(item_type, org_id)
-
         Model = apps.get_model(app_label='data', model_name=item_type)
         model_fields = [f.name for f in Model._meta.get_fields()]
         exclude_fields = ['id', 'inf_org_id', 'inf_import_id', 'inf_is_deleted', 'inf_created_at']
         include_fields = get_include_fields(model_fields, exclude_fields)
+
+        # Add default template
+        default_template = {}
+        for field in include_fields:
+            default_template[field] = {
+                'modelField': field,
+                'func': 'remain'
+            }
+        templates.append({'name': 'Default', 'listMatchFields': default_template})
+
         mandatory_fields = get_mandatory_fields(item_type)
 
         

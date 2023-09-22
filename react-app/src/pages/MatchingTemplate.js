@@ -23,8 +23,9 @@ export default () => {
   const [isViewDetail, setIsViewDetail] = useState(false);
   const [items, setItems] = useState([]);
   const [searchItems, setSearchItems] = useState([]);
-  const headerKeys = searchItems.length
-    ? Object.keys(searchItems[0]).map((key) => {
+  const [listFields, setListFields] = useState([]);
+  const headerKeys = listFields.length
+    ? listFields.map((key) => {
         return { label: key, key: key };
       })
     : [];
@@ -42,6 +43,7 @@ export default () => {
       if (data != undefined) {
         setAllItems(data.items);
         setIsViewDetail(data.isViewDetail);
+        setListFields(data.listFields);
       }
     }).catch((err) => alert(err));
   }, [itemType]);
@@ -115,6 +117,11 @@ export default () => {
             ) : (
               <></>
             )}
+              <Button variant="tertiary" className="m-1">
+                <CSVLink data={[]} headers={headerKeys}>
+                  Export default template
+                </CSVLink>
+              </Button>
           </Col>
           <Col xs={3} className="mb-4">
             <Form.Group>

@@ -41,6 +41,7 @@ export default () => {
         return { label: key, key: key };
       })
     : [];
+  console.log(headerKeys);
   const columns = searchItems.length
     ? Object.keys(searchItems[0]).map((key) => {
         return { Header: key, accessor: key };

@@ -32,6 +32,7 @@ export default () => {
 
   const [listFields, setListFields] = useState([]);
   const [listMandatoryFields, setListMandatoryFields] = useState([]);
+
   const [listTemplates, setListTemplates] = useState([]);
   const [listTransFuncs, setListTransFuncs] = useState([]);
 
@@ -58,7 +59,7 @@ export default () => {
         setListFields(data.listFields);
         setListTransFuncs(data.transFuncs);
         setListMandatoryFields(data.mandatoryFields);
-        setListTemplates(data.templates)
+        setListTemplates(data.templates);
       }
     }).catch((err) => alert(err));
   }, []);

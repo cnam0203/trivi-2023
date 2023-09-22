@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # install additional libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libstdc++6 netcat \
+    libstdc++6 netcat-traditional \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # copy entrypoint.sh
